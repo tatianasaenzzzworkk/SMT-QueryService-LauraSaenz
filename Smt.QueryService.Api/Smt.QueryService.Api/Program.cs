@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
-using Smt.QueryService.Api.Application.Interfaces;
-using Smt.QueryService.Api.Application.Services;
 using Smt.QueryService.Api.Infrastructure.Configuration;
 using Smt.QueryService.Api.Infrastructure.Extensions;
 

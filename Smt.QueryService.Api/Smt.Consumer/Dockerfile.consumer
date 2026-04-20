@@ -1,0 +1,17 @@
+# STAGE 1: BUILD
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+COPY Smt.Consumer.csproj .
+RUN dotnet restore Smt.Consumer.csproj
+
+COPY . .
+RUN dotnet publish Smt.Consumer.csproj -c Release -o /app/publish
+
+# STAGE 2: RUN
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+WORKDIR /app
+
+COPY --from=build /app/publish .
+
+ENTRYPOINT ["dotnet", "Smt.Consumer.dll"]

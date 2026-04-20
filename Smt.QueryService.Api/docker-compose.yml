@@ -2,6 +2,43 @@ version: "3.9"
 
 services:
 
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: smt-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    restart: unless-stopped
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: smt-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:7.0
+    container_name: smt-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: smt
+      MONGO_INITDB_ROOT_PASSWORD: smt123
+      MONGO_INITDB_DATABASE: smt_db
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+
   smt-query-service:
     build:
       context: .
@@ -15,11 +52,9 @@ services:
       - APP__DEFAULTMETRICSINTERVALMINUTES=60
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    depends_on:
+      - kafka
+      - mongodb
     restart: unless-stopped
 
   smt-iot-simulator:
@@ -34,3 +69,32 @@ services:
       - SIMULATE_INTERVAL_SECONDS=10
       - LOCATIONS=loc-001,loc-002,loc-003
     restart: unless-stopped
+
+  smt-producer:
+    build:
+      context: ./Smt.Producer
+      dockerfile: Dockerfile.producer
+    container_name: smt-producer
+    depends_on:
+      - kafka
+    environment:
+      - Kafka__BootstrapServers=kafka:29092
+    restart: unless-stopped
+
+  smt-consumer:
+    build:
+      context: ./Smt.Consumer
+      dockerfile: Dockerfile.consumer
+    container_name: smt-consumer
+    depends_on:
+      - kafka
+      - mongodb
+    environment:
+      - Kafka__BootstrapServers=kafka:29092
+      - Mongo__ConnectionString=mongodb://smt:smt123@smt-mongodb:27017
+      - Mongo__DatabaseName=smt_db
+    restart: unless-stopped
+
+volumes:
+  mongo_data:
+  

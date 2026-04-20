@@ -1,5 +1,5 @@
 # STAGE 1: BUILD
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
 COPY Smt.QueryService.Api/Smt.QueryService.Api.csproj Smt.QueryService.Api/
@@ -10,7 +10,7 @@ WORKDIR /src/Smt.QueryService.Api
 RUN dotnet publish Smt.QueryService.Api.csproj -c Release -o /app/publish
 
 # STAGE 2: RUN
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app
 
 COPY --from=build /app/publish .

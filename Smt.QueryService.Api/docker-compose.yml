@@ -43,15 +43,16 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: smt-query
     ports:
-      - "8080:8080"
+      - "8080-8082:8080"
     environment:
       - APP__SERVICENAME=smt-query-service
       - APP__ENVIRONMENTNAME=Development
       - APP__DEFAULTMETRICSINTERVALMINUTES=60
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
+      - Mongo__ConnectionString=mongodb://smt:smt123@smt-mongodb:27017
+      - Kafka__BootstrapServers=kafka:29092
     depends_on:
       - kafka
       - mongodb
@@ -95,6 +96,33 @@ services:
       - Mongo__DatabaseName=smt_db
     restart: unless-stopped
 
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: smt-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    depends_on:
+      - smt-query-service
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: smt-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
 volumes:
   mongo_data:
-  
+  grafana_data:

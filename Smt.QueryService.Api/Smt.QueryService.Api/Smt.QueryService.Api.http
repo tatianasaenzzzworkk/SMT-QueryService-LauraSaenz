@@ -1,0 +1,6 @@
+@Smt.QueryService.Api_HostAddress = http://localhost:5159
+
+GET {{Smt.QueryService.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

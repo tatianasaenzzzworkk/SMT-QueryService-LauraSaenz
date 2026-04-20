@@ -1,0 +1,15 @@
+.env
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.idea/
+.vscode/
+*.nupkg
+packages/
+*.log
+.DS_Store
+Thumbs.db

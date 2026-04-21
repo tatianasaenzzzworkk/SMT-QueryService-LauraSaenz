@@ -93,3 +93,5 @@ app.MapHealthChecks("/health/detail", new Microsoft.AspNetCore.Diagnostics.Healt
 });
 
 app.Run();
+
+public partial class Program { }
